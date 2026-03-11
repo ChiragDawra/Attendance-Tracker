@@ -1114,7 +1114,7 @@ export default function App() {
         </div>
         <div className="glow-tl"></div><div className="glow-br"></div>
         <div className="login-box">
-          <div className="heading-font title mb-2 text-teal" style={{ fontSize: '2rem' }}>ATTENDR</div>
+          <div className="heading-font title mb-2 text-teal" style={{ fontSize: '2rem' }}>MARKD</div>
           <p className="text-muted mb-2">Industrial grade attendance tracking.</p>
           <button className="btn btn-primary" style={{ width: '100%', padding: '1rem', fontSize: '1.1rem' }} onClick={handleLogin}>
             <Calendar size={20} /> Continue with Google
@@ -1139,7 +1139,7 @@ export default function App() {
       
       <header className="header">
         <div>
-            <div className="heading-font title">ATTENDR <span className="title-accent">//</span></div>
+            <div className="heading-font title">MARKD <span className="title-accent">//</span></div>
             <div className="sync-indicator mt-1">
                 <span className={`sync-dot ${syncStatus}`}></span>
                 {syncStatus === 'synced' ? 'SYNCED TO CLOUD' : syncStatus === 'syncing' ? 'SYNCING...' : 'OFFLINE MODE'}
