@@ -3,9 +3,9 @@ import { createClient } from '@supabase/supabase-js';
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { CheckCircle, Circle, AlertCircle, TrendingUp, LogOut, RotateCcw, Play, CheckSquare, Trash2, Calendar, Settings, Activity } from 'lucide-react';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
-const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-const supabase = (SUPABASE_URL && SUPABASE_KEY) ? createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Ensure we have a style tag
 const injectStyles = () => {
@@ -38,15 +38,19 @@ const injectStyles = () => {
     .title-accent { color: var(--teal); }
 
     .sync-indicator { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--text-muted); }
-    .sync-dot { width: 8px; height: 8px; border-radius: 50%; }
-    .sync-dot.synced { background: var(--teal); box-shadow: 0 0 8px var(--teal); }
-    .sync-dot.syncing { background: var(--amber); box-shadow: 0 0 8px var(--amber); animation: pulse 1s infinite alternate; }
-    .sync-dot.offline { background: var(--red); box-shadow: 0 0 8px var(--red); }
-    @keyframes pulse { from { opacity: 0.4; } to { opacity: 1; } }
+    .sync-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    .sync-dot.synced { background: #22d3ee; box-shadow: 0 0 10px #22d3ee; } /* Cyan for synced */
+    .sync-dot.syncing { background: #fbbf24; box-shadow: 0 0 10px #fbbf24; animation: pulse 1s infinite alternate; }
+    .sync-dot.error { background: #f87171; box-shadow: 0 0 10px #f87171; }
+    .sync-dot.green { background: #22d3a5; box-shadow: 0 0 10px #22d3a5; }
+
+    @keyframes pulse { from { opacity: 0.4; transform: scale(0.9); } to { opacity: 1; transform: scale(1.1); } }
 
     .user-sect { display: flex; align-items: center; gap: 1rem; }
-    .avatar { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border); background: var(--card); overflow: hidden; display: flex; align-items: center; justify-content: center;}
+    .avatar { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border); background: var(--card); overflow: hidden; display: flex; align-items: center; justify-content: center;}
     .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .user-info { display: flex; flex-direction: column; align-items: flex-end; }
+    .user-name { font-size: 0.85rem; font-weight: bold; color: var(--text-main); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
     .nav-tabs { display: flex; gap: 0.25rem; background: var(--card); padding: 0.25rem; border-radius: 2rem; border: 1px solid var(--border); margin: 2rem auto; width: fit-content; }
     .nav-tabs button { background: transparent; border: none; color: var(--text-muted); padding: 0.6rem 1.5rem; border-radius: 2rem; cursor: pointer; font-family: var(--font-mono); font-weight: 500; transition: all 0.2s; display: flex; align-items: center; gap: 0.5rem; }
@@ -60,8 +64,8 @@ const injectStyles = () => {
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; position: relative; overflow: hidden; }
     .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
     
-    .btn { background: var(--bg); border: 1px solid var(--border); color: var(--text-main); padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-family: var(--font-mono); display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s; }
-    .btn:hover:not(:disabled) { border-color: var(--text-muted); }
+    .btn { background: #0c121d; border: 1px solid var(--border); color: var(--text-main); padding: 0.6rem 1.2rem; border-radius: 8px; cursor: pointer; font-family: var(--font-mono); display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s; font-size: 0.9rem; }
+    .btn:hover:not(:disabled) { border-color: var(--teal); background: #131b2b; }
     .btn-primary { background: var(--teal); color: var(--bg); border-color: var(--teal); font-weight: 700; }
     .btn-primary:hover:not(:disabled) { background: #1eb38c; border-color: #1eb38c; box-shadow: 0 0 15px rgba(34,211,165,0.3); }
     .btn-danger { color: var(--red); border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.05); }
@@ -69,63 +73,24 @@ const injectStyles = () => {
     .btn-outline { background: transparent; }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    .input-field { background: #05080f; border: 1px solid var(--border); color: var(--text-main); padding: 0.75rem 1rem; border-radius: 6px; font-family: var(--font-mono); width: 100%; outline: none; transition: border 0.2s; margin-bottom: 1rem; }
-    .input-field:focus { border-color: var(--teal); }
+    .input-field { background: #05080f; border: 1px solid var(--border); color: var(--text-main); padding: 0.85rem 1rem; border-radius: 8px; font-family: var(--font-mono); width: 100%; outline: none; transition: all 0.2s; margin-bottom: 1rem; }
+    .input-field:focus { border-color: var(--teal); background: #0a0f1a; box-shadow: 0 0 10px rgba(34,211,165,0.1); }
 
-    .tag-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
-    .tag { display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(30, 41, 59, 0.5); border: 1px solid var(--border); padding: 0.35rem 0.75rem; border-radius: 6px; font-size: 0.85rem; }
-    .tag button { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 0; display: flex; align-items: center; transition: color 0.2s; }
-    .tag button:hover { color: var(--red); }
-
-    .day-tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem; overflow-x: auto; scrollbar-width: none; }
-    .day-tabs::-webkit-scrollbar { display: none; }
-    .day-tab { padding: 0.75rem 1.5rem; cursor: pointer; border-bottom: 2px solid transparent; color: var(--text-muted); transition: all 0.2s; white-space: nowrap; }
-    .day-tab:hover { color: var(--text-main); }
-    .day-tab.active { color: var(--teal); border-bottom-color: var(--teal); font-weight: bold; }
-
-    .subject-row { display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; border-bottom: 1px dashed var(--border); }
-    .subject-row:last-child { border-bottom: none; }
+    .login-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: var(--bg); position: relative; z-index: 100; overflow: hidden; }
+    .login-box { background: rgba(15, 22, 35, 0.8); backdrop-filter: blur(20px); border: 1px solid var(--border); padding: 3rem; border-radius: 20px; text-align: center; max-width: 420px; width: 90%; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); position: relative; z-index: 10; animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
     
-    .status-group { display: flex; gap: 0.5rem; }
-    .status-btn { width: 40px; height: 40px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text-muted); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; font-family: var(--font-heading); font-size: 1.2rem; }
-    .status-btn:hover { border-color: var(--text-muted); }
-    .status-btn.selected-P { border-color: var(--teal); color: var(--teal); background: rgba(34,211,165,0.1); box-shadow: inset 0 0 10px rgba(34,211,165,0.1); }
-    .status-btn.selected-A { border-color: var(--red); color: var(--red); background: rgba(248,113,113,0.1); box-shadow: inset 0 0 10px rgba(248,113,113,0.1); }
-    .status-btn.selected-L { border-color: var(--amber); color: var(--amber); background: rgba(251,191,36,0.1); box-shadow: inset 0 0 10px rgba(251,191,36,0.1); }
+    .login-divider { display: flex; align-items: center; margin: 1.5rem 0; color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; }
+    .login-divider::before, .login-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .login-divider::before { margin-right: 1rem; }
+    .login-divider::after { margin-left: 1rem; }
 
-    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-    .stat-box { background: var(--card); border: 1px solid var(--border); padding: 1.5rem; border-radius: 12px; text-align: center; }
-    .stat-value { font-family: var(--font-heading); font-size: 2.5rem; margin-top: 0.5rem; }
-    .stat-label { color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+    .loading-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
+    .spinner { width: 50px; height: 50px; border: 3px solid rgba(34,211,165,0.1); border-top-color: var(--teal); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 1.5rem; box-shadow: 0 0 15px rgba(34,211,165,0.2); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-family: var(--font-heading); color: var(--teal); letter-spacing: 2px; font-weight: bold; font-size: 0.9rem; animation: pulse 1.5s infinite alternate; }
 
-    .heatmap { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 1rem; }
-    .heatmap-cell { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-family: var(--font-mono); font-weight: bold; border: 1px solid rgba(255,255,255,0.05); }
-    .cell-grey { background: rgba(30, 41, 59, 0.5); color: transparent; }
-    .cell-red { background: rgba(248,113,113,0.2); color: var(--red); border-color: rgba(248,113,113,0.4); }
-    .cell-yellow { background: rgba(251,191,36,0.2); color: var(--amber); border-color: rgba(251,191,36,0.4); }
-    .cell-green { background: rgba(34,211,165,0.2); color: var(--teal); border-color: rgba(34,211,165,0.4); }
-
-    .progress-wrapper { margin-bottom: 2rem; }
-    .progress-header { display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-family: var(--font-heading); }
-    .progress-bar { height: 8px; background: #05080f; border-radius: 4px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 0.75rem;}
-    .progress-fill { height: 100%; transition: width 0.5s ease; }
-    .fill-red { background: var(--red); }
-    .fill-yellow { background: var(--amber); }
-    .fill-green { background: var(--teal); }
-    
-    .banner { padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem; }
-    .banner-red { background: rgba(248,113,113,0.1); color: var(--red); border: 1px solid rgba(248,113,113,0.2); }
-    .banner-green { background: rgba(34,211,165,0.1); color: var(--teal); border: 1px solid rgba(34,211,165,0.2); }
-
-    .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--card); border: 1px solid var(--border); padding: 1rem 2rem; border-radius: 30px; display: flex; align-items: center; gap: 0.75rem; box-shadow: 0 10px 30px rgba(0,0,0,0.5); opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 1000; font-family: var(--font-mono); }
-    .toast.visible { transform: translateX(-50%) translateY(0); opacity: 1; }
-    .toast.success { border-color: var(--teal); color: var(--teal); }
-    .toast.info { border-color: var(--amber); color: var(--text-main); }
-    .toast.error { border-color: var(--red); color: var(--red); }
-
-    .login-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: var(--bg); position: relative; z-index: 10; }
-    .login-box { background: var(--card); border: 1px solid var(--border); padding: 3rem; border-radius: 12px; text-align: center; max-width: 400px; width: 90%; box-shadow: 0 20px 40px rgba(0,0,0,0.4); position: relative; overflow: hidden;}
-    .login-box::before { content: ''; position: absolute; top:0; left:0; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, var(--teal), transparent); }
+    .error-banner { background: rgba(248, 113, 113, 0.1); border: 1px solid var(--red); color: var(--red); padding: 0.8rem; border-radius: 8px; font-size: 0.85rem; margin-bottom: 1.5rem; text-align: left; display: flex; align-items: flex-start; gap: 0.5rem; }
     
     .flex-between { display: flex; justify-content: space-between; align-items: center; }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
@@ -906,16 +871,17 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [data, setData] = useState(DEFAULT_DATA);
   const [activeTab, setActiveTab] = useState('setup');
-  const [syncStatus, setSyncStatus] = useState('offline');
+  const [syncStatus, setSyncStatus] = useState('synced');
   const [toast, setToast] = useState({ visible: false, message: '', type: 'info' });
   const [undoStack, setUndoStack] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [authError, setAuthError] = useState(null);
   
   const saveTimeout = useRef(null);
   const isFirstLoad = useRef(true);
-  
   const auroraRef = useRef(null);
   const neuralRef = useRef(null);
+
   useAuroraBackground(auroraRef);
   useNeuralBackground(neuralRef);
 
@@ -931,157 +897,166 @@ export default function App() {
     setToast({ visible: true, message, type });
   }, []);
 
-  // Auth Effect
+  // Auth & Session listener
   useEffect(() => {
-    if (!supabase) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setIsLoading(false);
-      return;
-    }
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setUser(session?.user ?? null);
+        if (!session) setIsLoading(false);
+      } catch (err) {
+        setSyncStatus('error');
+        setIsLoading(false);
+      }
+    };
+
+    initAuth();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      if (_event === 'SIGNED_OUT') {
+        setData(DEFAULT_DATA);
+        localStorage.removeItem('attendr_v2');
+      }
     });
+
     return () => subscription.unsubscribe();
   }, []);
 
-  // Load Data Effect
+  // Database Sync: Initial Load
   useEffect(() => {
-    const loadData = async () => {
+    if (!user) return;
+
+    const fetchUserData = async () => {
       setIsLoading(true);
-      const local = localStorage.getItem('attendr_v2');
-      let loadedData = local ? JSON.parse(local) : DEFAULT_DATA;
-      
-      if (user && supabase) {
-        try {
-          const { data: remoteData } = await supabase
-            .from('attendance_data')
-            .select('*')
-            .eq('user_id', user.id)
-            .single();
-            
-          if (remoteData) {
-            loadedData = {
-              subjects: remoteData.subjects || [],
-              timetable: remoteData.timetable || DEFAULT_DATA.timetable,
-              attendance: remoteData.attendance || {},
-              dailyLog: remoteData.dailyLog || remoteData.attendance || {},
-              phase: remoteData.phase || 'setup',
-              lectureSettings: remoteData.lectureSettings || DEFAULT_DATA.lectureSettings
-            };
-          }
-          setSyncStatus('synced');
-        } catch (err) {
-          console.warn('Failed to load remote data, using local fallback if available.', err);
-          setSyncStatus('offline');
+      try {
+        const { data: remoteData, error } = await supabase
+          .from('attendance_data')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error && error.code !== 'PGRST116') throw error; // PGRST116 is "no rows found"
+
+        if (remoteData) {
+          setData({
+            subjects: remoteData.subjects || [],
+            timetable: remoteData.timetable || DEFAULT_DATA.timetable,
+            attendance: remoteData.attendance || {},
+            dailyLog: remoteData.daily_log || remoteData.attendance || {},
+            phase: remoteData.phase || 'setup',
+            lectureSettings: remoteData.lecture_settings || DEFAULT_DATA.lectureSettings
+          });
+        } else {
+          // If no row, create one
+          await supabase.from('attendance_data').insert([{
+            user_id: user.id,
+            ...DEFAULT_DATA,
+            updated_at: new Date().toISOString()
+          }]);
+          setData(DEFAULT_DATA);
         }
-      } else {
-        setSyncStatus('offline');
+        setSyncStatus('synced');
+      } catch (err) {
+        console.error('Remote fetch failed, falling back to local.', err);
+        setSyncStatus('error');
+        const local = localStorage.getItem('attendr_v2');
+        if (local) setData(JSON.parse(local));
+      } finally {
+        setIsLoading(false);
+        isFirstLoad.current = false;
       }
-
-      if (loadedData.timetable) {
-        Object.keys(loadedData.timetable).forEach(day => {
-            loadedData.timetable[day] = loadedData.timetable[day].map((item, idx) => {
-                if (typeof item === 'string') {
-                    return {
-                        id: 'legacy_' + day + '_' + idx,
-                        subject: item,
-                        start: '09:00',
-                        duration: loadedData.lectureSettings?.durationMinutes || 60
-                    };
-                }
-                return item;
-            });
-            loadedData.timetable[day].sort((a,b) => (a.start || '09:00').localeCompare(b.start || '09:00'));
-        });
-      }
-
-      if (loadedData.subjects && loadedData.subjects.length > 0) {
-          loadedData.phase = 'ready';
-      }
-
-      setData(loadedData);
-      setActiveTab(loadedData.phase === 'ready' ? 'tracker' : 'setup');
-      isFirstLoad.current = false;
-      setIsLoading(false);
     };
 
-    if (user || !supabase) { // If no supabase, load local directly
-        loadData();
-    }
+    fetchUserData();
   }, [user]);
 
-  // Save Data Effect
+  // Database Sync: Debounced Upsert
   useEffect(() => {
-    if (isFirstLoad.current) return;
+    if (isFirstLoad.current || !user) return;
     
-    // Instant local save
+    // Save to LocalStorage immediately
     localStorage.setItem('attendr_v2', JSON.stringify(data));
     
-    if (user && supabase) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSyncStatus('syncing');
-      if (saveTimeout.current) clearTimeout(saveTimeout.current);
-      
-      saveTimeout.current = setTimeout(async () => {
-        try {
-          // Check if row exists
-          const { data: existing } = await supabase.from('attendance_data').select('id').eq('user_id', user.id).single();
-          const payload = {
-              user_id: user.id,
-              subjects: data.subjects,
-              timetable: data.timetable,
-              attendance: data.attendance,
-              dailyLog: data.dailyLog || {},
-              phase: data.phase,
-              lectureSettings: data.lectureSettings || DEFAULT_DATA.lectureSettings,
-              updated_at: new Date().toISOString()
-          };
-          
-          if (existing) {
-              await supabase.from('attendance_data').update(payload).eq('id', existing.id);
-          } else {
-              await supabase.from('attendance_data').insert([payload]);
-          }
-          setSyncStatus('synced');
-        } catch (err) {
-          console.error('Sync failed', err);
-          setSyncStatus('offline');
-          showToast('Cloud sync failed - working offline', 'error');
-        }
-      }, 1000);
-    }
-  }, [data, user, showToast]);
+    setSyncStatus('syncing');
+    if (saveTimeout.current) clearTimeout(saveTimeout.current);
+    
+    saveTimeout.current = setTimeout(async () => {
+      try {
+        const { error } = await supabase.from('attendance_data').upsert({
+          user_id: user.id,
+          subjects: data.subjects,
+          timetable: data.timetable,
+          attendance: data.attendance,
+          daily_log: data.dailyLog || {},
+          phase: data.phase,
+          lecture_settings: data.lectureSettings || DEFAULT_DATA.lectureSettings,
+          updated_at: new Date().toISOString()
+        });
 
-  const handleLogin = async () => {
-    if (!supabase) {
-        showToast('Supabase not configured. App will run offline locally.', 'info');
-        setIsLoading(false);
-        return;
+        if (error) throw error;
+        setSyncStatus('synced');
+      } catch (err) {
+        console.error('Sync failed', err);
+        setSyncStatus('error');
+      }
+    }, 1000);
+
+    return () => {
+        if (saveTimeout.current) clearTimeout(saveTimeout.current);
+    };
+  }, [data.subjects, data.timetable, data.attendance, data.phase, user]);
+
+  const handleEmailLogin = async (e, type) => {
+    e.preventDefault();
+    setAuthError(null);
+    const email = e.target.email.value;
+    const password = e.target.password.value;
+    
+    try {
+      const { error } = type === 'signin' 
+        ? await supabase.auth.signInWithPassword({ email, password })
+        : await supabase.auth.signUp({ email, password });
+      
+      if (error) throw error;
+    } catch (err) {
+      setAuthError(err.message);
     }
-    await supabase.auth.signInWithOAuth({ provider: 'google' });
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
+      if (error) throw error;
+    } catch (err) {
+      setAuthError(err.message);
+    }
   };
 
   const handleLogout = async () => {
-    if (supabase) await supabase.auth.signOut();
-    setUser(null);
-    setData(DEFAULT_DATA);
-    localStorage.removeItem('attendr_v2');
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error('Logout error', err);
+    }
   };
 
   const handleReset = useCallback(() => {
-    if (window.confirm("Are you sure? This will wipe all data!")) {
+    if (window.confirm("Are you sure? This will permanently wipe all data from cloud and local!")) {
       const reset = async () => {
-        if (user && supabase) {
-          await supabase.from('attendance_data').delete().eq('user_id', user.id);
+        try {
+          if (user) {
+            await supabase.from('attendance_data').delete().eq('user_id', user.id);
+          }
+          localStorage.removeItem('attendr_v2');
+          setData(DEFAULT_DATA);
+          setActiveTab('setup');
+          setUndoStack([]);
+          showToast('Data reset successfully', 'info');
+        } catch (err) {
+          console.error('Reset failed', err);
+          showToast('Failed to reset remote data', 'error');
         }
-        localStorage.removeItem('attendr_v2');
-        setData(DEFAULT_DATA);
-        setActiveTab('setup');
-        setUndoStack([]);
-        showToast('All data reset', 'info');
       };
       reset();
     }
@@ -1104,7 +1079,16 @@ export default function App() {
     showToast('Undo successful', 'success');
   };
 
-  if (!user && supabase && SUPABASE_URL && SUPABASE_KEY && isLoading === false) {
+  if (isLoading) {
+    return (
+      <div className="loading-overlay">
+        <div className="spinner"></div>
+        <div className="loading-text">LOADING YOUR DATA...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
     return (
       <div className="login-container">
         <div style={{ position:'fixed', inset:0, zIndex:0, pointerEvents:'none' }}>
@@ -1113,19 +1097,41 @@ export default function App() {
           <FloatingShapes />
         </div>
         <div className="glow-tl"></div><div className="glow-br"></div>
+        
         <div className="login-box">
-          <div className="heading-font title mb-2 text-teal" style={{ fontSize: '2rem' }}>MARKD</div>
-          <p className="text-muted mb-2">Industrial grade attendance tracking.</p>
-          <button className="btn btn-primary" style={{ width: '100%', padding: '1rem', fontSize: '1.1rem' }} onClick={handleLogin}>
-            <Calendar size={20} /> Continue with Google
-          </button>
+          <div className="heading-font title mb-1 text-teal" style={{ fontSize: '2.5rem', letterSpacing: '4px' }}>MARKD</div>
+          <p className="text-muted mb-2" style={{ letterSpacing: '2px', fontSize: '0.8rem' }}>MARK · TRACK · ANALYSE</p>
+          
+          {authError && (
+            <div className="error-banner">
+              <AlertCircle size={16} /> {authError}
+            </div>
+          )}
+
+          <div style={{ marginTop: '2rem' }}>
+            <form onSubmit={(e) => handleEmailLogin(e, 'signin')}>
+              <input name="email" type="email" placeholder="Email Address" className="input-field" required />
+              <input name="password" type="password" placeholder="Password" className="input-field" required />
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '0.5rem' }}>
+                <button type="submit" className="btn btn-primary">SIGN IN</button>
+                <button type="button" className="btn btn-outline" onClick={(e) => {
+                  const form = e.target.closest('form');
+                  if (form.reportValidity()) handleEmailLogin({ preventDefault: () => {}, target: form }, 'signup');
+                }}>SIGN UP</button>
+              </div>
+            </form>
+
+            <div className="login-divider">OR</div>
+
+            <button className="btn btn-outline" style={{ width: '100%', padding: '0.8rem', gap: '0.8rem' }} onClick={handleGoogleLogin}>
+              <img src="https://www.google.com/favicon.ico" width="18" height="18" alt="Google" />
+              Continue with Google
+            </button>
+          </div>
         </div>
       </div>
     );
-  }
-
-  if (isLoading) {
-      return <div className="login-container"><div className="heading-font title text-teal" style={{animation: 'pulse 1s infinite'}}>LOAD DATA //_</div></div>;
   }
 
   return (
@@ -1142,23 +1148,26 @@ export default function App() {
             <div className="heading-font title">MARKD <span className="title-accent">//</span></div>
             <div className="sync-indicator mt-1">
                 <span className={`sync-dot ${syncStatus}`}></span>
-                {syncStatus === 'synced' ? 'SYNCED TO CLOUD' : syncStatus === 'syncing' ? 'SYNCING...' : 'OFFLINE MODE'}
+                <span style={{ fontSize: '0.7rem', letterSpacing: '1px' }}>
+                    {syncStatus === 'synced' ? 'SYNCED' : syncStatus === 'syncing' ? 'SYNCING...' : 'OFFLINE / SYNC ERROR'}
+                </span>
             </div>
         </div>
         <div className="user-sect">
-            {(user || supabase === null) && (
-              <button className="btn btn-danger btn-outline" onClick={handleReset} title="Hard Reset">
-                <Settings size={16} /> RESET
-              </button>
-            )}
-            {user && (
-                <>
-                <div className="avatar">
-                    {user.user_metadata?.avatar_url ? <img src={user.user_metadata.avatar_url} alt="avatar" /> : <div className="text-muted">{user.email?.charAt(0).toUpperCase()}</div>}
-                </div>
-                <button className="btn btn-outline" style={{borderColor: 'transparent', color: 'var(--text-muted)'}} onClick={handleLogout}><LogOut size={18}/></button>
-                </>
-            )}
+            <button className="btn btn-danger btn-outline" style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem' }} onClick={handleReset} title="Hard Reset">
+                <Settings size={14} /> RESET
+            </button>
+            <div className="user-info">
+                <div className="user-name">{user.user_metadata?.full_name || user.email?.split('@')[0]}</div>
+                <button className="btn btn-outline" style={{ border: 'none', padding: 0.2, color: 'var(--red)', fontSize: '0.7rem' }} onClick={handleLogout}>LOGOUT</button>
+            </div>
+            <div className="avatar">
+                {user.user_metadata?.avatar_url ? (
+                  <img src={user.user_metadata.avatar_url} alt="avatar" />
+                ) : (
+                  <div className="text-muted" style={{ fontWeight: 'bold' }}>{user.email?.charAt(0).toUpperCase()}</div>
+                )}
+            </div>
         </div>
       </header>
 
