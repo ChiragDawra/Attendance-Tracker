@@ -61,7 +61,7 @@ const injectStyles = () => {
     .main-content { max-width: 900px; margin: 0 auto; padding: 0 1.5rem; animation: fadeIn 0.4s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; position: relative; overflow: hidden; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; position: relative; overflow: hidden; width: 100%; }
     .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
     
     .btn { background: #0c121d; border: 1px solid var(--border); color: var(--text-main); padding: 0.6rem 1.2rem; border-radius: 8px; cursor: pointer; font-family: var(--font-mono); display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s; font-size: 0.9rem; }
@@ -159,10 +159,10 @@ const injectStyles = () => {
     .checkbox-label.checked { border-color: var(--teal); color: var(--teal); }
 
     /* ── STAT GRID (Tracker + Analytics) ── */
-    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
-    .stat-box { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; position: relative; overflow: hidden; }
-    .stat-label { font-size: 0.7rem; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.3rem; }
-    .stat-value { font-family: var(--font-heading); font-size: 2rem; font-weight: 800; line-height: 1.1; }
+    .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; width: 100%; }
+    .stat-box { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; position: relative; overflow: hidden; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 120px; }
+    .stat-label { font-size: 0.75rem; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 600; }
+    .stat-value { font-family: var(--font-heading); font-size: 2.2rem; font-weight: 800; line-height: 1.1; }
 
     /* ── TAG LIST (Setup subject chips) ── */
     .tag-list { display: flex; flex-wrap: wrap; gap: 0.5rem; min-height: 2rem; }
@@ -171,11 +171,11 @@ const injectStyles = () => {
     .tag button:hover { opacity: 1; }
 
     /* ── DAY TABS (Tracker) ── */
-    .day-tabs { display: flex; overflow-x: auto; border-bottom: 1px solid var(--border); scrollbar-width: none; }
+    .day-tabs { display: flex; overflow-x: auto; border-bottom: 1px solid var(--border); scrollbar-width: none; width: 100%; justify-content: space-around; }
     .day-tabs::-webkit-scrollbar { display: none; }
-    .day-tab { padding: 1rem 1.2rem; cursor: pointer; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); border-bottom: 2px solid transparent; white-space: nowrap; text-align: center; transition: all 0.2s; user-select: none; }
+    .day-tab { padding: 1rem; cursor: pointer; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); border-bottom: 2px solid transparent; white-space: nowrap; text-align: center; transition: all 0.2s; user-select: none; flex: 1; min-width: 80px; }
     .day-tab:hover { color: var(--text-main); background: rgba(255,255,255,0.02); }
-    .day-tab.active { color: var(--teal); border-bottom-color: var(--teal); }
+    .day-tab.active { color: var(--teal); border-bottom-color: var(--teal); background: rgba(34,211,165,0.05); }
 
     /* ── SUBJECT ROWS (Tracker) ── */
     .subject-row { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.2rem; background: rgba(30,41,59,0.25); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 0.75rem; transition: background 0.2s, border-color 0.2s; }
@@ -201,8 +201,7 @@ const injectStyles = () => {
     /* ── PROGRESS HEADER (Analytics subject row) ── */
     .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem; }
 
-    /* ── App.css conflict override ── */
-    .card { background: var(--card) !important; border: 1px solid var(--border) !important; border-radius: 12px !important; padding: 1.5rem !important; }
+    /* Fixed double override of .card which was causing padding issues */
   `;
     document.head.appendChild(style);
 };
