@@ -1,16 +1,32 @@
-# React + Vite
+# MARKD — Attendance Tracker
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Mark, track and analyse your class attendance.
 
-Currently, two official plugins are available:
+## Setup
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+```bash
+npm install
+npm run dev
+```
 
-## React Compiler
+## Google OAuth — Fix Redirect (IMPORTANT)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+If Google login redirects to the wrong URL, add your local dev URL
+to Supabase's allowed redirect list:
 
-## Expanding the ESLint configuration
+1. Go to your Supabase project → **Authentication → URL Configuration**
+2. Under **Redirect URLs**, add:
+   - `http://localhost:5173`
+   - `http://localhost:5174` (in case port shifts)
+   - Your production URL (e.g. `https://yourapp.vercel.app`)
+3. Click **Save**
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+The code already sends `redirectTo: window.location.origin` so it always
+redirects back to whatever environment the app is running in.
+
+## Stack
+
+- React 19 + Vite
+- Supabase (Auth + Postgres)
+- Recharts (charts)
+- Lucide React (icons)
