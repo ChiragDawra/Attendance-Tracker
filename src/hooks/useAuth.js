@@ -2,53 +2,57 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
 export function useAuth() {
-  const [user,      setUser]      = useState(null)
-  const [loading,   setLoading]   = useState(true)
-  const [authError, setAuthError] = useState(null)
+  const [user,       setUser]       = useState(null)
+  const [loading,    setLoading]    = useState(true)
+  const [authError,  setAuthError]  = useState(null)
+  const [signUpDone, setSignUpDone] = useState(false)
 
   useEffect(() => {
-    // Grab existing session on mount
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
       setLoading(false)
     }).catch(() => setLoading(false))
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
     })
     return () => subscription.unsubscribe()
   }, [])
 
-  /** Email/password sign-in */
   const signIn = async (email, password) => {
     setAuthError(null)
+    setSignUpDone(false)
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) { setAuthError(error.message); throw error }
   }
 
-  /** Email/password sign-up */
   const signUp = async (email, password) => {
     setAuthError(null)
+    setSignUpDone(false)
     const { error } = await supabase.auth.signUp({ email, password })
     if (error) { setAuthError(error.message); throw error }
+    // Supabase sends a confirmation email — flag it so UI can show feedback
+    setSignUpDone(true)
   }
 
   /**
-   * Google OAuth — FIX: pass `redirectTo: window.location.origin` so Supabase
-   * always redirects back to whatever environment the app is running in
-   * (http://localhost:5173 in dev, production URL in prod).
+   * Google OAuth — always pass redirectTo: window.location.origin
+   * so Supabase redirects back to localhost in dev, prod URL in prod.
    *
-   * You ALSO need to add those URLs in Supabase dashboard:
-   *   Authentication → URL Configuration → Redirect URLs
+   * ── REQUIRED in Supabase dashboard ──────────────────────────────────
+   * Authentication → URL Configuration → Redirect URLs → Add:
+   *   http://localhost:5173
+   *   http://localhost:5174
+   *   https://your-production-url.vercel.app
+   * Without adding these, Supabase ignores redirectTo and uses its
+   * hardcoded Site URL (your old Vercel deployment).
+   * ────────────────────────────────────────────────────────────────────
    */
   const signInWithGoogle = async () => {
     setAuthError(null)
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: {
-        redirectTo: window.location.origin,
-      },
+      options: { redirectTo: window.location.origin },
     })
     if (error) { setAuthError(error.message); throw error }
   }
@@ -57,5 +61,9 @@ export function useAuth() {
     await supabase.auth.signOut()
   }
 
-  return { user, loading, authError, setAuthError, signIn, signUp, signInWithGoogle, signOut }
+  return {
+    user, loading, authError, setAuthError,
+    signUpDone, setSignUpDone,
+    signIn, signUp, signInWithGoogle, signOut,
+  }
 }

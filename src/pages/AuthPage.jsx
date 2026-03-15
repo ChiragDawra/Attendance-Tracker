@@ -1,35 +1,78 @@
-import { useRef } from 'react'
-import { AlertCircle } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { AlertCircle, CheckCircle, Mail } from 'lucide-react'
 import { useAurora, useNeural } from '../hooks/useBackground'
 import FloatingShapes from '../components/effects/FloatingShapes'
 
-export default function AuthPage({ authError, signIn, signUp, signInWithGoogle }) {
+export default function AuthPage({ authError, signUpDone, setSignUpDone, signIn, signUp, signInWithGoogle }) {
   const auroraRef = useRef(null)
   const neuralRef = useRef(null)
   useAurora(auroraRef)
   useNeural(neuralRef)
 
-  const handleSubmit = async (e, type) => {
+  const [busy, setBusy] = useState(false)
+
+  const handleSignIn = async (e) => {
     e.preventDefault()
-    const email    = e.target.email.value
-    const password = e.target.password.value
-    if (type === 'signin') await signIn(email, password)
-    else await signUp(email, password)
+    setBusy(true)
+    try {
+      await signIn(e.target.email.value, e.target.password.value)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const handleSignUp = async (e) => {
+    e.preventDefault()
+    setBusy(true)
+    try {
+      await signUp(e.target.email.value, e.target.password.value)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const Backgrounds = () => (
+    <>
+      <div className="auth-canvas-layer">
+        <canvas ref={auroraRef} />
+        <canvas ref={neuralRef} style={{ zIndex: 1 }} />
+      </div>
+      <FloatingShapes />
+      <div className="auth-glows">
+        <div className="glow-tl" /><div className="glow-br" />
+      </div>
+    </>
+  )
+
+  /* ── Sign-up success — show email confirmation notice ── */
+  if (signUpDone) {
+    return (
+      <div className="auth-screen">
+        <Backgrounds />
+        <div className="auth-card" style={{ textAlign: 'center' }}>
+          <div style={{ marginBottom: 20 }}>
+            <Mail size={40} color="var(--teal)" style={{ margin: '0 auto 12px' }} />
+            <div className="auth-logo" style={{ fontSize: '1.8rem' }}>CHECK YOUR EMAIL</div>
+          </div>
+          <p style={{ color: 'var(--text-2)', fontSize: 13, lineHeight: 1.7, marginBottom: 24 }}>
+            We sent a confirmation link to your email address.<br />
+            Click it to activate your account, then sign in.
+          </p>
+          <button
+            className="btn btn-primary btn-lg btn-full"
+            onClick={() => setSignUpDone(false)}
+          >
+            BACK TO SIGN IN
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className="auth-screen">
-      {/* Animated backgrounds */}
-      <div className="auth-canvas-layer">
-        <canvas ref={auroraRef} />
-        <canvas ref={neuralRef} style={{ zIndex:1 }} />
-      </div>
-      <FloatingShapes />
-      <div className="auth-glows">
-        <div className="glow-tl"/><div className="glow-br"/>
-      </div>
+      <Backgrounds />
 
-      {/* Card */}
       <div className="auth-card">
         <div className="auth-brand">
           <div className="auth-logo">MARKD</div>
@@ -38,42 +81,82 @@ export default function AuthPage({ authError, signIn, signUp, signInWithGoogle }
 
         {authError && (
           <div className="error-box">
-            <AlertCircle size={14} style={{ flexShrink:0, marginTop:1 }}/>
+            <AlertCircle size={14} style={{ flexShrink: 0, marginTop: 1 }} />
             {authError}
           </div>
         )}
 
-        <form onSubmit={e => handleSubmit(e, 'signin')}>
+        {/* Sign In form */}
+        <form id="auth-form" onSubmit={handleSignIn}>
           <div className="input-wrap">
             <label className="input-label">Email</label>
-            <input name="email" type="email" className="input" placeholder="you@example.com" required autoComplete="email"/>
+            <input
+              name="email" type="email" className="input"
+              placeholder="you@example.com" required autoComplete="email"
+            />
           </div>
-          <div className="input-wrap" style={{ marginBottom:12 }}>
+          <div className="input-wrap" style={{ marginBottom: 14 }}>
             <label className="input-label">Password</label>
-            <input name="password" type="password" className="input" placeholder="••••••••••" required autoComplete="current-password"/>
+            <input
+              name="password" type="password" className="input"
+              placeholder="••••••••••" required autoComplete="current-password"
+              minLength={6}
+            />
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
-            <button type="submit" className="btn btn-primary btn-lg">SIGN IN</button>
-            <button type="button" className="btn btn-lg" onClick={e => {
-              const form = e.target.closest('form')
-              if (form.reportValidity()) {
-                const email = form.email.value, password = form.password.value
-                signUp(email, password)
-              }
-            }}>SIGN UP</button>
+
+          {/* Two separate submit buttons — one per action */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <button
+              type="submit"
+              className="btn btn-primary btn-lg"
+              disabled={busy}
+            >
+              {busy ? '…' : 'SIGN IN'}
+            </button>
+            <button
+              type="button"
+              className="btn btn-lg"
+              disabled={busy}
+              onClick={async (e) => {
+                // Validate form fields, then trigger sign-up
+                const form = document.getElementById('auth-form')
+                if (!form.reportValidity()) return
+                await handleSignUp({ preventDefault: () => {}, target: form })
+              }}
+            >
+              {busy ? '…' : 'SIGN UP'}
+            </button>
           </div>
         </form>
 
         <div className="auth-divider">OR</div>
 
-        <button className="btn btn-lg btn-full" style={{ gap:10 }} onClick={signInWithGoogle}>
-          <img src="https://www.google.com/favicon.ico" width="16" height="16" alt="Google"/>
+        {/* Google — redirectTo fix is in useAuth.js */}
+        <button
+          className="btn btn-lg btn-full"
+          style={{ gap: 10 }}
+          onClick={signInWithGoogle}
+          disabled={busy}
+        >
+          <img src="https://www.google.com/favicon.ico" width="16" height="16" alt="Google" />
           Continue with Google
         </button>
 
-        <p style={{ marginTop:16, fontSize:10, color:'var(--text-3)', textAlign:'center', letterSpacing:1 }}>
-          Google sign-in redirects to this origin automatically.
-        </p>
+        {/* Supabase dashboard reminder */}
+        <div style={{
+          marginTop: 16,
+          padding: '10px 12px',
+          background: 'rgba(56,189,248,.06)',
+          border: '1px solid rgba(56,189,248,.15)',
+          borderRadius: 'var(--r-sm)',
+          fontSize: 10,
+          color: 'var(--text-3)',
+          lineHeight: 1.6,
+        }}>
+          <strong style={{ color: 'var(--blue)' }}>Google redirect not working?</strong><br />
+          Go to Supabase → Authentication → URL Configuration → Redirect URLs
+          and add <code style={{ color: 'var(--text-2)' }}>{window.location.origin}</code>
+        </div>
       </div>
     </div>
   )

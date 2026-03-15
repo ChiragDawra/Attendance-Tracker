@@ -13,7 +13,7 @@ import MobileNav from './components/layout/MobileNav'
 import Toast     from './components/ui/Toast'
 
 export default function App() {
-  const { user, loading: authLoading, authError, setAuthError, signIn, signUp, signInWithGoogle, signOut } = useAuth()
+  const { user, loading: authLoading, authError, setAuthError, signUpDone, setSignUpDone, signIn, signUp, signInWithGoogle, signOut } = useAuth()
   const { data, setData, syncStatus, dataLoading, resetData } = useAttendance(user)
   const { toast, showToast } = useToast()
 
@@ -61,6 +61,8 @@ export default function App() {
       <>
         <AuthPage
           authError={authError}
+          signUpDone={signUpDone}
+          setSignUpDone={setSignUpDone}
           signIn={async (e, p) => { try { await signIn(e, p) } catch {} }}
           signUp={async (e, p) => { try { await signUp(e, p) } catch {} }}
           signInWithGoogle={async () => { try { await signInWithGoogle() } catch {} }}
